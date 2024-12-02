@@ -66,13 +66,11 @@
 <body>
 
   <div class="container">
-    <h1>Chụp Ảnh từ Camera</h1>
+    <h1>Camera Đang Hiển Thị</h1>
 
     <div class="camera-container">
       <video id="video" autoplay></video>
     </div>
-
-    <button id="captureButton">Chụp Ảnh</button>
 
     <canvas id="canvas" style="display: none;"></canvas>
 
@@ -82,7 +80,6 @@
   <script>
     // Lấy các phần tử DOM
     const videoElement = document.getElementById('video');
-    const captureButton = document.getElementById('captureButton');
     const canvasElement = document.getElementById('canvas');
     const resultDiv = document.getElementById('result');
 
@@ -97,26 +94,7 @@
       }
     }
 
-    // Chụp ảnh từ video
-    captureButton.addEventListener('click', () => {
-      const context = canvasElement.getContext('2d');
-      const width = videoElement.videoWidth;
-      const height = videoElement.videoHeight;
-
-      canvasElement.width = width;
-      canvasElement.height = height;
-
-      // Vẽ hình ảnh từ video lên canvas
-      context.drawImage(videoElement, 0, 0, width, height);
-
-      // Lấy dữ liệu ảnh từ canvas
-      const imageData = canvasElement.toDataURL('image/png');
-
-      // Hiển thị ảnh đã chụp
-      resultDiv.innerHTML = `<img src="${imageData}" alt="Chụp ảnh">`;
-    });
-
-    // Bắt đầu camera khi tải trang
+    // Chạy camera ngay khi trang tải
     startCamera();
   </script>
 
