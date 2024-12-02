@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nhận diện văn bản từ Camera</title>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.1/dist/tesseract.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f9;
+      text-align: center;
+    }
+
+    .container {
+      width: 80%;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: white;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    #videoElement {
+      width: 100%;
+      max-width: 600px;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #333;
+      white-space: pre-wrap;
+      text-align: left;
+      background-color: #e0e0e0;
+      padding: 10px;
+      border-radius: 5px;
+    }
+
+    #loading {
+      display: none;
+      margin-top: 20px;
+      font-size: 20px;
+      color: #007bff;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Nhận diện văn bản từ Camera</h1>
+    <p>Chụp ảnh từ camera và nhận diện các dòng chứa "OTT" và "NW".</p>
+    <video id="videoElement" autoplay></video>
+    <button id="captureButton">Chụp ảnh</button>
+    <div id="loading">Đang xử lý, vui lòng đợi...</div>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    const videoElement = document.getElementById('videoElement');
+    const captureButton = document.getElementById('captureButton');
+    const resultDiv = document.getElementById('result');
+    const loadingDiv = document.getElementById('loading');
+    let currentStream;
+
+    // Bật camera
+    function startCamera() {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then((stream) => {
+          videoElement.srcObject = stream;
+          currentStream = stream;
+        })
+        .catch((err) => {
+          console.error("Lỗi khi truy cập camera: ", err);
+        });
+    }
+
+    // Chụp ảnh từ camera
+    captureButton.addEventListener('click', () => {
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      const width = videoElement.videoWidth;
+      const height = videoElement.videoHeight;
+
+      canvas.width = width;
+      canvas.height = height;
+      context.drawImage(videoElement, 0, 0, width, height);
+      const imageData = canvas.toDataURL('image/png');
+      
+      // Gọi hàm nhận diện văn bản từ ảnh đã chụp
+      recognizeText(imageData);
+    });
+
+    // Hàm nhận diện văn bản
+    function recognizeText(imageData) {
+      loadingDiv.style.display = 'block'; // Hiển thị thông báo đang xử lý
+      resultDiv.innerText = ''; // Xóa kết quả trước đó
+
+      Tesseract.recognize(
+        imageData,
+        'vie', // Ngôn ngữ tiếng Việt
+        {
+          logger: (m) => console.log(m),
+        }
+      ).then(({ data: { text } }) => {
+        loadingDiv.style.display = 'none'; // Ẩn thông báo đang xử lý
+
+        // Lọc các dòng chứa "OTT" và "NW"
+        const filteredText = filterLines(text);
+        resultDiv.innerText = filteredText;
+      }).catch((error) => {
+        loadingDiv.style.display = 'none';
+        resultDiv.innerText = 'Có lỗi xảy ra: ' + error.message;
+      });
+    }
+
+    // Hàm lọc các dòng chứa "OTT" và "NW"
+    function filterLines(text) {
+      const lines = text.split('\n');
+      const filteredLines = lines.filter(line => line.includes('OTT') || line.includes('NW'));
+      return filteredLines.join('\n');
+    }
+
+    // Khởi động camera khi trang được tải
+    startCamera();
+  </script>
+
+</body>
+</html>
