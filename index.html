@@ -80,10 +80,32 @@
     const resultDiv = document.getElementById('result');
     const loadingDiv = document.getElementById('loading');
     let currentStream;
+    let rearCamera;
 
-    // Bật camera
-    function startCamera() {
-      navigator.mediaDevices.getUserMedia({ video: true })
+    // Lấy danh sách các thiết bị camera
+    async function getCameras() {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      rearCamera = devices.find(device => device.kind === 'videoinput' && device.label.toLowerCase().includes('back'));
+
+      if (!rearCamera) {
+        console.error('Không tìm thấy camera sau');
+        return;
+      }
+
+      // Bắt đầu camera sau
+      startCamera(rearCamera.deviceId);
+    }
+
+    // Bật camera với deviceId
+    function startCamera(deviceId) {
+      const constraints = {
+        video: {
+          deviceId: deviceId,
+          facingMode: { exact: "environment" } // Chỉ định sử dụng camera sau
+        }
+      };
+
+      navigator.mediaDevices.getUserMedia(constraints)
         .then((stream) => {
           videoElement.srcObject = stream;
           currentStream = stream;
@@ -139,8 +161,8 @@
       return filteredLines.join('\n');
     }
 
-    // Khởi động camera khi trang được tải
-    startCamera();
+    // Khởi động camera khi trang được tải và tìm camera sau
+    getCameras();
   </script>
 
 </body>
